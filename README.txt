@@ -1,3 +1,1 @@
-To specify which set of initial conditions to use, supply a 0 (DamBreak), 1 (Pebble), or 2 (Wave).  0 is the default.
-
-Partner: Brendan Bozorgmir
+Code for general parallel proxy based graph and mesh classes, and applications to solving Poisson systems, mass spring systems, and shallow water flux problems.
