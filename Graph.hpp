@@ -581,6 +581,36 @@ class Graph {
     bool operator==(const NodeIterator& ni) const {
       return (ni.index() == node_index_ && ni.g_ == g_);
     }
+		
+		NodeIterator& operator+=(int n){
+			node_index_ += n;
+			return *this;
+		}
+		
+		NodeIterator& operator-=(int n){
+			node_index_ -= n;
+			return *this;
+		}
+		
+		bool operator<(const NodeIterator& ni) const{
+			if (g_ < ni.g_){
+				return true;
+			}
+			if (g_ == ni.g_ && node_index_ < ni.node_index_){
+				return true;
+			}
+			return false;
+		}
+		
+		NodeIterator& operator[](int n){
+			node_index_ = n;
+			return *this;
+		}
+		
+		node_iterator operator-(node_iterator a){
+			return NodeIterator(this->g_, node_index_ - a->node_index_);
+		}
+	
 
    private:
     friend class Graph;
@@ -599,6 +629,19 @@ class Graph {
   node_iterator node_end() const {
     return NodeIterator(this, i2u_.size());
   }
+	
+	friend node_iterator operator+(node_iterator a, int n){
+		return a+=n;
+	}
+	
+	friend node_iterator operator+(int n, node_iterator a){
+		return a+=n;
+	}
+	
+	friend node_iterator operator-(node_iterator a, int n){
+		return a-=n;
+	}
+	
 
   /** @class Graph::EdgeIterator
    * @brief Iterator class for edges. A forward iterator. */
