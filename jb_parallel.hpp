@@ -35,7 +35,10 @@ namespace jb_parallel {
 
   template<class Iter, class UnaryFunction>
   void for_each(Iter first, Iter last, UnaryFunction f) {
-#pragma omp parallel for [cyclic, block, dynamic, guided]
+    using category = typename std::iterator_traits<Iter>::iterator_category;
+    static_assert(std::is_same<category, std::random_access_iterator_tag>::value,
+                "for each requires random-access iterators!");
+#pragma omp parallel for num_threads(2) [cyclic, block, dynamic, guided]
     for (auto it = first; it != last; ++it) {
       f(*it);
     }

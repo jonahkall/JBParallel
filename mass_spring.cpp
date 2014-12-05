@@ -80,27 +80,15 @@ struct position_mod {
  */
 template <typename G, typename F, typename Constraint>
 double symp_euler_step(G& g, double t, double dt, F force, Constraint c) {
-  // Compute the {n+1} node positions
-  /*for (auto it = g.node_begin(); it != g.node_end(); ++it) {
-    // Update the position of the node according to its velocity
-    // x^{n+1} = x^{n} + v^{n} * dt
-    (*it).position() += (*it).value().velocity * dt;
-  }*/
+
   position_mod<F> pm(dt);
-  std::for_each(g.node_begin(), g.node_end(), pm);
+  jb_parallel::for_each(g.node_begin(), g.node_end(), pm);
 
   // Apply the constraint.
   c(g,t);
 
   velocity_mod<F> vm(force, dt, t);
-  std::for_each(g.node_begin(), g.node_end(), vm);
-
-  // Compute the {n+1} node velocities
-  /*for (auto it = g.node_begin(); it != g.node_end(); ++it) {
-    auto n = *it;
-    // v^{n+1} = v^{n} + F(x^{n+1},t) * dt / m
-    n.value().velocity += force(n, t) * (dt / n.value().mass);
-  }*/
+  jb_parallel::for_each(g.node_begin(), g.node_end(), vm);
 
   return t + dt;
 }
