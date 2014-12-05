@@ -15,15 +15,42 @@
 
 namespace jb_parallel {
 
-  // sorts the motherfucker
-  void parallel_merge_sort(vector<int>& array) {
+  // RAII helper class for timing code
+  struct Timer {
+    std::string msg;
+    CS207::Clock clock;
+    Timer(const std::string& s) : msg(s) {
+      clock.start();
+    }
+    ~Timer() {
+      double elapsed = clock.seconds();
+      std::cout << msg << ": " << elapsed << "s" << std::endl;
+    }
+  };
 
+  // sorts the motherfucker
+  void parallel_merge_sort(std::vector<int>& array) {
+    (void) array;
+  }
+
+  template<class Iter, class UnaryFunction>
+  void for_each(Iter first, Iter last, UnaryFunction f) {
+#pragma omp parallel for [cyclic, block, dynamic, guided]
+    for (auto it = first; it != last; ++it) {
+      f(*it);
+    }
   }
 
 }
 
+/* 
 
+#pragma omp parallel
+{
+  int id = ?
+  int 
+}
 
-
+*/
 
 #endif

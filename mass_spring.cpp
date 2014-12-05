@@ -9,6 +9,7 @@
  */
 
 #include <fstream>
+#include <algorithm>
 
 #include "CS207/SDLViewer.hpp"
 #include "CS207/Util.hpp"
@@ -16,7 +17,7 @@
 
 #include "Graph.hpp"
 #include "Point.hpp"
-
+#include "jb_parallel.hpp"
 
 // Gravity in meters/sec^2
 static constexpr double grav = 9.81;
@@ -38,6 +39,31 @@ typedef Graph<NodeData, EdgeData> GraphType;
 typedef typename GraphType::node_type Node;
 typedef typename GraphType::edge_type Edge;
 
+template <typename F>
+struct velocity_mod {
+  F force;
+  double dt;
+  double t;
+  void operator () (Node n) {
+    n.value().velocity += force(n, t) * (dt / n.value().mass);
+  }
+  velocity_mod(F force1, double dt1, double t1) :
+      force(force1), dt(dt1), t(t1) {};
+};
+
+template <typename F>
+struct position_mod {
+  double dt;
+  void operator () (Node n) {
+    n.position() += n.value().velocity * dt;
+  }
+  position_mod(double dt1) : dt(dt1) {};
+};
+
+//CombinedConstraint(Constraint1 C1, Constraint2 C2) : C1_(C1), C2_(C2) {};
+
+
+  
 /** Change a graph's nodes according to a step of the symplectic Euler
  *    method with the given node force.
  * @param[in,out] g      Graph
@@ -55,23 +81,26 @@ typedef typename GraphType::edge_type Edge;
 template <typename G, typename F, typename Constraint>
 double symp_euler_step(G& g, double t, double dt, F force, Constraint c) {
   // Compute the {n+1} node positions
-  for (auto it = g.node_begin(); it != g.node_end(); ++it) {
-    auto n = *it;
-
+  /*for (auto it = g.node_begin(); it != g.node_end(); ++it) {
     // Update the position of the node according to its velocity
     // x^{n+1} = x^{n} + v^{n} * dt
-    n.position() += n.value().velocity * dt;
-  }
+    (*it).position() += (*it).value().velocity * dt;
+  }*/
+  position_mod<F> pm(dt);
+  std::for_each(g.node_begin(), g.node_end(), pm);
 
   // Apply the constraint.
   c(g,t);
 
+  velocity_mod<F> vm(force, dt, t);
+  std::for_each(g.node_begin(), g.node_end(), vm);
+
   // Compute the {n+1} node velocities
-  for (auto it = g.node_begin(); it != g.node_end(); ++it) {
+  /*for (auto it = g.node_begin(); it != g.node_end(); ++it) {
     auto n = *it;
     // v^{n+1} = v^{n} + F(x^{n+1},t) * dt / m
     n.value().velocity += force(n, t) * (dt / n.value().mass);
-  }
+  }*/
 
   return t + dt;
 }
@@ -232,6 +261,11 @@ struct SphereDelConstraint {
   }
 };
 
+struct EmptyConstraint {
+  void operator () (GraphType&, double) {
+  }
+};
+
 int main(int argc, char** argv) {
   // Check arguments
   if (argc < 3) {
@@ -289,41 +323,38 @@ int main(int argc, char** argv) {
   std::cout << graph.num_nodes() << " " << graph.num_edges() << std::endl;
 
   // Launch the SDLViewer
-  CS207::SDLViewer viewer;
-  auto node_map = viewer.empty_node_map(graph);
-  viewer.launch();
+  //CS207::SDLViewer viewer;
+  //auto node_map = viewer.empty_node_map(graph);
+  //viewer.launch();
 
-  viewer.add_nodes(graph.node_begin(), graph.node_end(), node_map);
-  viewer.add_edges(graph.edge_begin(), graph.edge_end(), node_map);
-  viewer.center_view();
+  //viewer.add_nodes(graph.node_begin(), graph.node_end(), node_map);
+  //viewer.add_edges(graph.edge_begin(), graph.edge_end(), node_map);
+  //viewer.center_view();
 
   // Begin the mass-spring simulation
   // Decrease timestep if you don't want grid3 to crash.
-  double dt = 0.001;
+  double dt = 0.0005;
   double t_start = 0.0;
-  double t_end   = 5.0;
+  double t_end   = 0.12;
 
   // Combines the plane constraint and the sphere constraint with deletion.
-  auto C = CombinedConstraint<PlaneConstraint, SphereDelConstraint>
-      (PlaneConstraint(),SphereDelConstraint());
+  //auto C = CombinedConstraint<PlaneConstraint, SphereDelConstraint>
+  //    (PlaneConstraint(),SphereDelConstraint());
+  auto C = EmptyConstraint();
 
+  { jb_parallel::Timer timer("Symplectic Euler Step");
   for (double t = t_start; t < t_end; t += dt) {
     symp_euler_step(graph, t, dt, Problem1Force(), C);
 
-    viewer.clear();
-    node_map.clear();
+    //viewer.clear();
+    //node_map.clear();
 
     // Update viewer with nodes' new positions
-    viewer.add_nodes(graph.node_begin(), graph.node_end(), node_map);
-    viewer.add_edges(graph.edge_begin(), graph.edge_end(), node_map);
+    //viewer.add_nodes(graph.node_begin(), graph.node_end(), node_map);
+    //viewer.add_edges(graph.edge_begin(), graph.edge_end(), node_map);
 
-    viewer.set_label(t);
-
-    // These lines slow down the animation for small graphs, like grid0_*.
-    // Feel free to remove them or tweak the constants.
-    if (graph.size() < 100)
-      CS207::sleep(0.001);
+    //viewer.set_label(t);
   }
-
+  }
   return 0;
 }
