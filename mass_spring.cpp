@@ -19,6 +19,8 @@
 #include "Point.hpp"
 #include "jb_parallel.hpp"
 
+using namespace jb_parallel;
+
 // Gravity in meters/sec^2
 static constexpr double grav = 9.81;
 
@@ -82,13 +84,13 @@ template <typename G, typename F, typename Constraint>
 double symp_euler_step(G& g, double t, double dt, F force, Constraint c) {
 
   position_mod<F> pm(dt);
-  jb_parallel::for_each(g.node_begin(), g.node_end(), pm);
+  std::for_each(g.node_begin(), g.node_end(), pm);
 
   // Apply the constraint.
   c(g,t);
 
   velocity_mod<F> vm(force, dt, t);
-  jb_parallel::for_each(g.node_begin(), g.node_end(), vm);
+  std::for_each(g.node_begin(), g.node_end(), vm);
 
   return t + dt;
 }
@@ -311,9 +313,9 @@ int main(int argc, char** argv) {
   std::cout << graph.num_nodes() << " " << graph.num_edges() << std::endl;
 
   // Launch the SDLViewer
-  //CS207::SDLViewer viewer;
-  //auto node_map = viewer.empty_node_map(graph);
-  //viewer.launch();
+  // CS207::SDLViewer viewer;
+  // auto node_map = viewer.empty_node_map(graph);
+  // viewer.launch();
 
   //viewer.add_nodes(graph.node_begin(), graph.node_end(), node_map);
   //viewer.add_edges(graph.edge_begin(), graph.edge_end(), node_map);
@@ -337,7 +339,7 @@ int main(int argc, char** argv) {
     //viewer.clear();
     //node_map.clear();
 
-    // Update viewer with nodes' new positions
+    //Update viewer with nodes' new positions
     //viewer.add_nodes(graph.node_begin(), graph.node_end(), node_map);
     //viewer.add_edges(graph.edge_begin(), graph.edge_end(), node_map);
 

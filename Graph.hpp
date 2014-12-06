@@ -11,6 +11,10 @@
 #include <set>
 #include <map>
 #include <unordered_map>
+#include <functional>
+
+#include <boost/iterator/transform_iterator.hpp>
+#include <boost/iterator/filter_iterator.hpp>
 
 #include "CS207/Util.hpp"
 #include "Point.hpp"
@@ -51,8 +55,8 @@ class Graph {
   typedef unsigned size_type;
 
   /** Type of node iterators, which iterate over all graph nodes. */
-  class NodeIterator;
   /** Synonym for NodeIterator */
+  class NodeIterator;
   typedef NodeIterator node_iterator;
 
   /** Type of edge iterators, which iterate over all graph edges. */
@@ -581,6 +585,40 @@ class Graph {
     bool operator==(const NodeIterator& ni) const {
       return (ni.index() == node_index_ && ni.g_ == g_);
     }
+		
+		NodeIterator& operator+=(int n){
+			node_index_ += n;
+			return *this;
+		}
+		
+		NodeIterator& operator-=(int n){
+			node_index_ -= n;
+			return *this;
+		}
+		
+		bool operator<(const NodeIterator& ni) const{
+			if (g_ < ni.g_){
+				return true;
+			}
+			if (g_ == ni.g_ && node_index_ < ni.node_index_){
+				return true;
+			}
+			return false;
+		}
+		
+		NodeIterator& operator[](int n){
+			node_index_ = n;
+			return *this;
+		}
+		
+		int operator-(node_iterator a){
+			return node_index_ - a.node_index_;
+		}
+
+    //node_iterator operator-(node_iterator a){
+    //  return NodeIterator(this->g_, node_index_ - a->node_index_);
+   // }
+	
 
    private:
     friend class Graph;
@@ -589,6 +627,18 @@ class Graph {
     NodeIterator(const Graph* g, size_type index = 0) :
         node_index_(index), g_(const_cast<Graph*>(g)){}
   };
+
+  friend node_iterator operator+(node_iterator a, int n){
+    return a+=n;
+  }
+  
+  friend node_iterator operator+(int n, node_iterator a){
+    return a+=n;
+  }
+  
+  friend node_iterator operator-(node_iterator a, int n){
+    return a-=n;
+  }
 
   // Returns a node_iterator indexed to the first node in the graph.
   node_iterator node_begin() const {
@@ -599,6 +649,39 @@ class Graph {
   node_iterator node_end() const {
     return NodeIterator(this, i2u_.size());
   }
+
+  struct uid2Node {
+    Graph* g_;
+    Node operator()(const int& uid) {
+      return Node(g_, uid);
+    }
+    uid2Node(const Graph* g) : g_(const_cast<Graph*>(g)){};
+    friend class Graph;
+  };
+
+  //std::function<Node()>
+
+  // std::function<Node(size_type)> uid2Node;
+
+  // using NodeIterator = boost::transform_iterator<uid2Node,
+  //     std::vector<size_type>::const_iterator>;
+
+  // // Returns a node_iterator indexed to the first node in the graph.
+  // NodeIterator node_begin() const {
+  //   uid2Node = [] (size_type uid) {return Node(this, uid);};
+  //   auto u = boost::make_transform_iterator(i2u_.begin(), uid2Node);
+  //   return u;
+  // }
+
+  // // Returns a node_iterator indexed to the last node in the graph.
+  // NodeIterator node_end() const {
+  //   uid2Node = [] (size_type uid) {return Node(this, uid);};
+  //   auto u = boost::make_transform_iterator(i2u_.end(), uid2Node);
+  //   return u;  
+  // }
+
+  //boost::transform_iterator<uid2Node,
+   //   std::vector<size_type>::const_iterator>
 
   /** @class Graph::EdgeIterator
    * @brief Iterator class for edges. A forward iterator. */
@@ -804,9 +887,9 @@ class Graph {
 
   // Wrapper around remove node above which takes a node_iterator, and returns
   // a node_iterator.
-  node_iterator remove_node(node_iterator n_it) {
+  /*node_iterator remove_node(node_iterator n_it) {
     return NodeIterator(this, remove_node(*n_it));
-  }
+  }*/
 
   /** Remove an edge from the graph.
    * @pre @a a, @a b are valid nodes in the graph.

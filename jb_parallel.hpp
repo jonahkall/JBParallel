@@ -6,6 +6,7 @@
 #include <cassert>
 #include <cmath>
 #include <omp.h>
+#include <algorithm>
 
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/iterator/filter_iterator.hpp>
@@ -30,30 +31,48 @@ namespace jb_parallel {
 
   // sorts the motherfucker
   void parallel_merge_sort(std::vector<int>& array) {
-    (void) array;
+    int sz = array.size();
+    #pragma omp parallel
+    {
+      int id = omp_get_thread_num();
+      int nthreads = omp_get_num_threads();
+
+      auto start = array.begin() + id * sz / nthreads;
+      auto end = array.end();
+      if (id != nthreads - 1){
+        end = array.begin() + (id + 1) * sz / nthreads;
+      }
+      std::sort(start, end);
+    }
   }
 
   template<class Iter, class UnaryFunction>
   void for_each(Iter first, Iter last, UnaryFunction f) {
-    using category = typename std::iterator_traits<Iter>::iterator_category;
-    static_assert(std::is_same<category, std::random_access_iterator_tag>::value,
-                "for each requires random-access iterators!");
-#pragma omp parallel for num_threads(2) [cyclic, block, dynamic, guided]
-    for (auto it = first; it != last; ++it) {
-      f(*it);
+    int dist = last - first;
+    // Parallelize blockwise
+#pragma omp parallel
+    {
+      int id = omp_get_thread_num();
+      int nthreads = omp_get_num_threads();
+
+      auto start = first + id * dist / nthreads;
+      auto end = last;
+      if (id != nthreads - 1){
+        end = first + (id + 1) * dist / nthreads;
+      }
+      for (auto it = start; it != end; ++it) {
+        f(*it);
+      }
     }
+
   }
 
-}
+  // void parallel_transform
 
-/* 
+  // 
 
-#pragma omp parallel
-{
-  int id = ?
-  int 
-}
 
-*/
+
+} // namespace jb_parallel
 
 #endif
