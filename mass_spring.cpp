@@ -74,7 +74,7 @@ struct position_mod {
  * @param[in]     force  Function object defining the force per node
  * @return the next time step (usually @a t + @a dt)
  *
- * @tparam G::node_value_type supports ???????? YOU CHOOSE
+ * @tparam G::node_value_type
  * @tparam F is a function object called as @a force(n, @a t),
  *           where n is a node of the graph and @a t is the current time.
  *           @a force must return a Point representing the force vector on Node
@@ -84,14 +84,19 @@ template <typename G, typename F, typename Constraint>
 double symp_euler_step(G& g, double t, double dt, F force, Constraint c) {
 
   position_mod<F> pm(dt);
-  std::for_each(g.node_begin(), g.node_end(), pm);
-
+  bool optimize = true;
+  if (optimize)
+    for_each(g.node_begin(), g.node_end(), pm);
+  else
+    std::for_each(g.node_begin(), g.node_end(), pm);
   // Apply the constraint.
   c(g,t);
 
   velocity_mod<F> vm(force, dt, t);
-  std::for_each(g.node_begin(), g.node_end(), vm);
-
+  if (optimize)
+    for_each(g.node_begin(), g.node_end(), vm);
+  else
+    std::for_each(g.node_begin(), g.node_end(), vm);
   return t + dt;
 }
 
@@ -312,14 +317,18 @@ int main(int argc, char** argv) {
   // Print out the stats
   std::cout << graph.num_nodes() << " " << graph.num_edges() << std::endl;
 
-  // Launch the SDLViewer
-  // CS207::SDLViewer viewer;
-  // auto node_map = viewer.empty_node_map(graph);
-  // viewer.launch();
+  bool visualize = false;
 
-  //viewer.add_nodes(graph.node_begin(), graph.node_end(), node_map);
-  //viewer.add_edges(graph.edge_begin(), graph.edge_end(), node_map);
-  //viewer.center_view();
+  // Launch the SDLViewer
+  CS207::SDLViewer viewer;
+  auto node_map = viewer.empty_node_map(graph);
+  if (visualize) {
+    viewer.launch();
+
+    viewer.add_nodes(graph.node_begin(), graph.node_end(), node_map);
+    viewer.add_edges(graph.edge_begin(), graph.edge_end(), node_map);
+    viewer.center_view();
+  }
 
   // Begin the mass-spring simulation
   // Decrease timestep if you don't want grid3 to crash.
@@ -336,14 +345,16 @@ int main(int argc, char** argv) {
   for (double t = t_start; t < t_end; t += dt) {
     symp_euler_step(graph, t, dt, Problem1Force(), C);
 
-    //viewer.clear();
-    //node_map.clear();
+    if (visualize) {
+      viewer.clear();
+      node_map.clear();
 
-    //Update viewer with nodes' new positions
-    //viewer.add_nodes(graph.node_begin(), graph.node_end(), node_map);
-    //viewer.add_edges(graph.edge_begin(), graph.edge_end(), node_map);
+      //Update viewer with nodes' new positions
+      viewer.add_nodes(graph.node_begin(), graph.node_end(), node_map);
+      viewer.add_edges(graph.edge_begin(), graph.edge_end(), node_map);
 
-    //viewer.set_label(t);
+      viewer.set_label(t);
+    }
   }
   }
   return 0;

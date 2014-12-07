@@ -7,6 +7,7 @@
 #include <cmath>
 #include <omp.h>
 #include <algorithm>
+#include <climits>
 
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/iterator/filter_iterator.hpp>
@@ -16,7 +17,8 @@
 
 namespace jb_parallel {
 
-  // RAII helper class for timing code
+  // RAII helper class for timing code.
+  // Cris wrote this.
   struct Timer {
     std::string msg;
     CS207::Clock clock;
@@ -29,28 +31,76 @@ namespace jb_parallel {
     }
   };
 
-  // sorts the motherfucker
-  void parallel_merge_sort(std::vector<int>& array) {
+  // Simple function which tells the user how many
+  // threads OMP is making available.
+  int threads_available() {
+    int p;
+    #pragma omp parallel
+    {
+      p = omp_get_num_threads();
+    }
+    return p;
+  }
+
+  // Sorts an array of ints in O(n log n /p)
+  void parallel_sort(std::vector<int>& array) {
     int sz = array.size();
+    std::vector<std::vector<int>::iterator> bounds;
     #pragma omp parallel
     {
       int id = omp_get_thread_num();
       int nthreads = omp_get_num_threads();
 
       auto start = array.begin() + id * sz / nthreads;
+      std::cout << "start bound: " << id * sz / nthreads << std::endl;
       auto end = array.end();
+      bounds.push_back(start);
       if (id != nthreads - 1){
         end = array.begin() + (id + 1) * sz / nthreads;
       }
+      bounds.push_back(end);
       std::sort(start, end);
     }
+    std::sort(bounds.begin(), bounds.end());
+    // Time to do some in_place merges
+    int nc = bounds.size()/2;
+    int lb = log10(nc)/log10(2);
+    (void) lb;
+  }
+
+  template<typename T>
+  T parallel_min(std::vector<T>& x) {
+    int nt = threads_available();
+    std::vector<int> mins(nt);
+    auto sz = x.size();
+    #pragma omp parallel
+    {
+      int id = omp_get_thread_num();
+      int nthreads = omp_get_num_threads();
+      auto start = id * sz / nthreads;
+
+      int end = sz;
+      if (id != nthreads - 1){
+        end = (id + 1) * sz / nthreads;
+      }
+      int min_seen = LONG_MAX;
+      for (int i = start; i < end; ++i) {
+        min_seen = std::min(min_seen, x[i]);
+      }
+      mins[id] = min_seen;
+    }
+    int min_total = LONG_MAX;
+    for (int i = 0; i < mins.size(); ++i) {
+      min_total = std::min(min_total, mins[i]);
+    }
+    return min_total;
   }
 
   template<class Iter, class UnaryFunction>
   void for_each(Iter first, Iter last, UnaryFunction f) {
     int dist = last - first;
     // Parallelize blockwise
-#pragma omp parallel
+    #pragma omp parallel
     {
       int id = omp_get_thread_num();
       int nthreads = omp_get_num_threads();
@@ -67,11 +117,25 @@ namespace jb_parallel {
 
   }
 
-  // void parallel_transform
+  template<class Iter, class UnaryFunction>
+  void parallel_transform(Iter first, Iter last, UnaryFunction f) {
+    int dist = last - first;
+    // Parallelize blockwise
+#pragma omp parallel
+    {
+      int id = omp_get_thread_num();
+      int nthreads = omp_get_num_threads();
 
-  // 
-
-
+      auto start = first + id * dist / nthreads;
+      auto end = last;
+      if (id != nthreads - 1){
+        end = first + (id + 1) * dist / nthreads;
+      }
+      for (auto it = start; it != end; ++it) {
+        *it = f(*it);
+      }
+    }
+  }
 
 } // namespace jb_parallel
 
