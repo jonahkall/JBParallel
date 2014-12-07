@@ -27,26 +27,70 @@ int main () {
   std::default_random_engine generator(std::chrono::system_clock::now().time_since_epoch().count());
   std::uniform_int_distribution<int> distribution(1,12000000);
   auto gen = std::bind(distribution, generator);
-  (void)gen;
+  (void) gen;
   // allocate 100 million random integers
   srand(time(NULL));
-  for (int i = 0; i < 110000000; ++i) {
-    x.push_back(rand() % 200000000);
+  for (int i = 0; i < 30000000; ++i) {
+    x.push_back(rand() % 20000000);
   }
 
-  /*for (int i = 0; i < 20; ++i) {
-    std::cout << x[i] << " ";
+  std::vector<int> min_test;
+  for (int i = 0; i < 100000400; ++i) {
+    min_test.push_back(rand() % 20000000);
   }
-  std::cout << std::endl << std::endl << std::endl;
-
-  parallel_sort(x);*/
 
   { Timer timer("Serial Min");
-    std::cout << *(std::min_element(x.begin(), x.end())) << std::endl;
+    std::cout << "Min element found by serial: " 
+              << *(std::min_element(min_test.begin(), min_test.end()))
+              << std::endl;
   }
 
   { Timer timer("jb_parallel parallel_min");
-    std::cout << parallel_min(x) << std::endl;
+    std::cout << "Min element found by parallel: "
+              << parallel_min(min_test) << std::endl;
+  }
+
+  unsigned N = 40000000;
+  std::vector<double> a;
+
+   // Normal loop
+  a = std::vector<double>(N,4);
+  { Timer timer("Serial Parallel Loop");
+    for (auto it = a.begin(); it < a.end(); ++it)
+      *it = std::exp(std::sqrt(*it));
+  }
+
+    // Parallel loop
+  a = std::vector<double>(N,4);
+  { Timer timer("OMP Parallel Loop");
+#pragma omp parallel for
+    for (auto it = a.begin(); it < a.end(); ++it) {
+      *it = std::exp(std::sqrt(*it));
+    }
+  }
+
+  // Wrapped in a function
+  a = std::vector<double>(N,4);
+  { Timer timer("JB Parallel_Transform");
+    // Create a lambda function and call parallel_transform
+    auto func = [](double ai) { return std::exp(std::sqrt(ai)); };
+    jb_parallel::parallel_transform(a.begin(), a.end(), func);
+  }
+
+  std::vector<int> y = x;
+
+  { Timer timer("Serial Sort");
+    std::sort(y.begin(), y.end());
+  }
+
+
+  { Timer timer("Parallel Sort");
+    parallel_sort(x);
+  }
+
+  // Check that parallel sort is sorting correctly.
+  for (size_t i = 0; i < x.size() - 1; ++i) {
+    assert(x[i] <= x[i + 1]);
   }
 
   return 0;

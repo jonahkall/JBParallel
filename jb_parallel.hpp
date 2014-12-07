@@ -45,27 +45,32 @@ namespace jb_parallel {
   // Sorts an array of ints in O(n log n /p)
   void parallel_sort(std::vector<int>& array) {
     int sz = array.size();
-    std::vector<std::vector<int>::iterator> bounds;
+    int nt = threads_available();
+    // currently only works for 4 cores.
+    assert(nt == 4);
+    std::vector<std::vector<int>::iterator> bounds(nt*2);
     #pragma omp parallel
     {
       int id = omp_get_thread_num();
       int nthreads = omp_get_num_threads();
+      //std::cout << nthreads << std::endl;
 
       auto start = array.begin() + id * sz / nthreads;
-      std::cout << "start bound: " << id * sz / nthreads << std::endl;
+      //std::cout << "start bound: " << id * sz / nthreads << std::endl;
       auto end = array.end();
-      bounds.push_back(start);
       if (id != nthreads - 1){
         end = array.begin() + (id + 1) * sz / nthreads;
       }
-      bounds.push_back(end);
+      bounds[2*id] = start;
+      bounds[2*id + 1] = end;
       std::sort(start, end);
     }
     std::sort(bounds.begin(), bounds.end());
     // Time to do some in_place merges
-    int nc = bounds.size()/2;
-    int lb = log10(nc)/log10(2);
-    (void) lb;
+    // currently hardcoded for 4 cores
+    std::inplace_merge(bounds[0],bounds[2], bounds[3]);
+    std::inplace_merge(bounds[4],bounds[6], bounds[7]);
+    std::inplace_merge(bounds[0], bounds[4], bounds[7]);
   }
 
   template<typename T>
