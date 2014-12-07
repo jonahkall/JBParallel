@@ -16,12 +16,14 @@ EXEC += test_edges
 EXEC += mtl_test
 EXEC += poisson
 EXEC += shallow_water
+EXEC += ptest
+EXEC += openmp
 
 # Get the shell name to determine the OS
 UNAME := $(shell uname)
 
 # Define the C++ compiler to use
-CXX := $(shell which clang++) -std=c++11
+CXX := $(shell which g++) -std=c++11
 
 # Dependency directory and flags
 DEPSDIR := $(shell mkdir -p .deps; echo .deps)
@@ -36,8 +38,7 @@ DEPSFLAGS = -MD -MF $(DEPSFILE) -MP
 INCLUDES += -I.
 INCLUDES += -I/home/jonah/MTL-4.0.9555-Linux/usr/include/
 # Define CXX compile flags
-CXXFLAGS += -O3 -funroll-loops -W -Wall -Wextra #-Wfatal-errors
-
+CXXFLAGS += -O3 -funroll-loops -fopenmp -W -Wall -Wextra #-Wfatal-errors
 # Define any directories containing libraries
 #   To include directories use -Lpath/to/files
 LDFLAGS +=
