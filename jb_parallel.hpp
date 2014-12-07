@@ -43,27 +43,28 @@ namespace jb_parallel {
   }
 
   // Sorts an array of ints in O(n log n /p)
-  void parallel_sort(std::vector<int>& array) {
-    int sz = array.size();
+  template<typename IteratorType>
+  void parallel_sort(IteratorType begin, IteratorType end) {
+    int sz = end - begin;
     int nt = threads_available();
     // currently only works for 4 cores.
     assert(nt == 4);
-    std::vector<std::vector<int>::iterator> bounds(nt*2);
+    std::vector<IteratorType> bounds(nt*2);
     #pragma omp parallel
     {
       int id = omp_get_thread_num();
       int nthreads = omp_get_num_threads();
       //std::cout << nthreads << std::endl;
 
-      auto start = array.begin() + id * sz / nthreads;
+      auto start = begin + id * sz / nthreads;
       //std::cout << "start bound: " << id * sz / nthreads << std::endl;
-      auto end = array.end();
-      if (id != nthreads - 1){
-        end = array.begin() + (id + 1) * sz / nthreads;
+      auto finish = end;
+			if (id != nthreads - 1){
+        finish = begin + (id + 1) * sz / nthreads;
       }
       bounds[2*id] = start;
-      bounds[2*id + 1] = end;
-      std::sort(start, end);
+      bounds[2*id + 1] = finish;
+      std::sort(start, finish);
     }
     std::sort(bounds.begin(), bounds.end());
     // Time to do some in_place merges
@@ -73,28 +74,32 @@ namespace jb_parallel {
     std::inplace_merge(bounds[0], bounds[4], bounds[7]);
   }
 
-  template<typename T>
-  T parallel_min(std::vector<T>& x) {
+	template <typename IteratorType>
+	// function for finding minimum of standard vector
+	// in O(n/p). Works for any number of cores.
+	// Requires a random access iterator
+	typename std::iterator_traits<IteratorType>::value_type
+	parallel_min(IteratorType begin, IteratorType end) {
     int nt = threads_available();
     std::vector<int> mins(nt);
-    auto sz = x.size();
+    auto sz = end - begin;
     #pragma omp parallel
     {
       int id = omp_get_thread_num();
       int nthreads = omp_get_num_threads();
       auto start = id * sz / nthreads;
 
-      int end = sz;
+      int finish = sz;
       if (id != nthreads - 1){
-        end = (id + 1) * sz / nthreads;
+        finish = (id + 1) * sz / nthreads;
       }
-      int min_seen = LONG_MAX;
-      for (int i = start; i < end; ++i) {
-        min_seen = std::min(min_seen, x[i]);
+			typename std::iterator_traits<IteratorType>::value_type min_seen = *(begin + start);
+      for (auto i = begin + start; i <  begin + finish; ++i) {
+        min_seen = std::min(min_seen, *i);
       }
       mins[id] = min_seen;
     }
-    int min_total = LONG_MAX;
+		typename std::iterator_traits<IteratorType>::value_type min_total = mins[0];
     for (int i = 0; i < mins.size(); ++i) {
       min_total = std::min(min_total, mins[i]);
     }
