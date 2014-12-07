@@ -611,11 +611,6 @@ class Graph {
 			return *this;
 		}
 		
-<<<<<<< HEAD
-		node_iterator operator-(node_iterator a){
-			return NodeIterator(this->g_, node_index_ - a->node_index_);
-		}
-=======
 		int operator-(node_iterator a){
 			return node_index_ - a.node_index_;
 		}
@@ -623,7 +618,6 @@ class Graph {
     //node_iterator operator-(node_iterator a){
     //  return NodeIterator(this->g_, node_index_ - a->node_index_);
    // }
->>>>>>> dfa1aa42332cdafc40f019416c9cfdeaae37e5fb
 	
 
    private:
@@ -655,19 +649,6 @@ class Graph {
   node_iterator node_end() const {
     return NodeIterator(this, i2u_.size());
   }
-	
-	friend node_iterator operator+(node_iterator a, int n){
-		return a+=n;
-	}
-	
-	friend node_iterator operator+(int n, node_iterator a){
-		return a+=n;
-	}
-	
-	friend node_iterator operator-(node_iterator a, int n){
-		return a-=n;
-	}
-	
 
   struct uid2Node {
     Graph* g_;
