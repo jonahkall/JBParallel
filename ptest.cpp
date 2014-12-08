@@ -47,7 +47,7 @@ int main () {
 
   { Timer timer("jb_parallel parallel_min");
     std::cout << "Min element found by parallel: "
-              << parallel_min(min_test) << std::endl;
+              << parallel_min(min_test.begin(), min_test.end()) << std::endl;
   }
 
   unsigned N = 40000000;
@@ -85,7 +85,7 @@ int main () {
 
 
   { Timer timer("Parallel Sort");
-    parallel_sort(x);
+    parallel_sort(x.begin(),x.end());
   }
 
   // Check that parallel sort is sorting correctly.
