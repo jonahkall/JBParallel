@@ -93,13 +93,13 @@ namespace jb_parallel {
       if (id != nthreads - 1){
         finish = (id + 1) * sz / nthreads;
       }
-			typename std::iterator_traits<IteratorType>::value_type min_seen = *(begin + start);
+			auto min_seen = *(begin + start);
       for (auto i = begin + start; i <  begin + finish; ++i) {
         min_seen = std::min(min_seen, *i);
       }
       mins[id] = min_seen;
     }
-		typename std::iterator_traits<IteratorType>::value_type min_total = mins[0];
+		auto min_total = mins[0];
     for (int i = 0; i < mins.size(); ++i) {
       min_total = std::min(min_total, mins[i]);
     }

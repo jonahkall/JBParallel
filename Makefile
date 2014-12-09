@@ -18,6 +18,7 @@ EXEC += poisson
 EXEC += shallow_water
 EXEC += ptest
 EXEC += openmp
+EXEC += kmeans
 
 # Get the shell name to determine the OS
 UNAME := $(shell uname)
