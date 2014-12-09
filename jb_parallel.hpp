@@ -14,7 +14,6 @@
 
 #include "CS207/Util.hpp"
 
-
 namespace jb_parallel {
 
   // RAII helper class for timing code.
@@ -47,6 +46,10 @@ namespace jb_parallel {
   void parallel_sort(IteratorType begin, IteratorType end) {
     int sz = end - begin;
     int nt = threads_available();
+    if (nt == 1) {
+      std::sort(begin, end);
+      return;
+    }
     // currently only works for 4 cores.
     assert(nt == 4);
     std::vector<IteratorType> bounds(nt*2);
@@ -69,9 +72,14 @@ namespace jb_parallel {
     std::sort(bounds.begin(), bounds.end());
     // Time to do some in_place merges
     // currently hardcoded for 4 cores
-    std::inplace_merge(bounds[0],bounds[2], bounds[3]);
-    std::inplace_merge(bounds[4],bounds[6], bounds[7]);
-    std::inplace_merge(bounds[0], bounds[4], bounds[7]);
+    if (nt == 4) {
+      std::inplace_merge(bounds[0],bounds[2], bounds[3]);
+      std::inplace_merge(bounds[4],bounds[6], bounds[7]);
+      std::inplace_merge(bounds[0], bounds[4], bounds[7]);
+    }
+    if (nt == 2) {
+      std::inplace_merge(bounds[0],bounds[2], bounds[3]);
+    }
   }
 
 	template <typename IteratorType>
@@ -106,11 +114,11 @@ namespace jb_parallel {
     return min_total;
   }
 
-  template<class Iter, class UnaryFunction>
+ template<class Iter, class UnaryFunction>
   void for_each(Iter first, Iter last, UnaryFunction f) {
     int dist = last - first;
     // Parallelize blockwise
-    #pragma omp parallel
+#pragma omp parallel
     {
       int id = omp_get_thread_num();
       int nthreads = omp_get_num_threads();
