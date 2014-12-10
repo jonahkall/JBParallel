@@ -649,6 +649,26 @@ public:
     bool operator==(const mesh_triangle_iterator& mti) const {
       return (index_ == mti.index_ && m_ == mti.m_);
     }
+
+    mesh_triangle_iterator& operator[](int n){
+      assert(n < m_->tris_.size() && n >= 0);
+      index_ = n;
+      return *this;
+    }
+    
+    int operator-(mesh_triangle_iterator a){
+      return index_ - a.index_;
+    }
+
+    mesh_triangle_iterator& operator+=(int n){
+      index_ += n;
+      return *this;
+    }
+    
+    mesh_triangle_iterator& operator-=(int n){
+      index_ -= n;
+      return *this;
+    }
   
   private:
     friend class Mesh;
@@ -659,6 +679,18 @@ public:
     mesh_triangle_iterator(size_type index, const Mesh* m) :
         index_(index), m_(const_cast<Mesh*>(m)) {};
 	};
+
+  friend mesh_triangle_iterator operator+(mesh_triangle_iterator a, int n){
+    return a+=n;
+  }
+  
+  friend mesh_triangle_iterator operator+(int n, mesh_triangle_iterator a){
+    return a+=n;
+  }
+  
+  friend mesh_triangle_iterator operator-(mesh_triangle_iterator a, int n){
+    return a-=n;
+  }
 	
   // Returns an iterator to the first triangle in the graph.
   mesh_triangle_iterator triangle_begin() const {

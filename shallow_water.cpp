@@ -16,6 +16,7 @@
 
 #include "Point.hpp"
 #include "Mesh.hpp"
+#include "jb_parallel.hpp"
 
 // Standard gravity (average gravity at Earth's surface) in meters/sec^2
 static constexpr double grav = 9.80665;
@@ -170,8 +171,38 @@ struct NodePosition {
   }
 };
 
+template<typename Tri>
+struct FluxUpdater{
+  double dt_;
+  void operator () (Tri t) {
+    QVar flux_sum = QVar(0,0,0);
 
+    // set the fluxes correctly
+    if (t == t.edge1().triangle1()) {
+      flux_sum += t.edge1().value().flux_;
+    }
+    else {
+      flux_sum -= t.edge1().value().flux_;
+    }
 
+    if (t == t.edge2().triangle1()) {
+      flux_sum += t.edge2().value().flux_;
+    }
+    else {
+      flux_sum -= t.edge2().value().flux_;
+    }
+
+    if (t == t.edge3().triangle1()) {
+      flux_sum += t.edge3().value().flux_;
+    }
+    else {
+      flux_sum -= t.edge3().value().flux_;
+    }
+
+    t.value().q_k_bar_ -= (dt_/t.area()) * flux_sum;
+  }
+  FluxUpdater(double dt) : dt_(dt) {};
+};
 /** Integrate a hyperbolic conservation law defined over the mesh m
  * with flux functor f by dt in time.
  */
@@ -207,37 +238,8 @@ double hyperbolic_step(MESH& m, FLUX& f, double t, double dt) {
     }
   }
 
-
-
-  QVar flux_sum = QVar(0,0,0);
-  for (auto it = m.triangle_begin(); it != m.triangle_end(); ++it) {
-    // now we can go back through and update all the Q_bars.
-    flux_sum = QVar(0,0,0);
-
-    // set the fluxes correctly
-    if ((*it) == (*it).edge1().triangle1()) {
-      flux_sum += (*it).edge1().value().flux_;
-    }
-    else {
-      flux_sum -= (*it).edge1().value().flux_;
-    }
-
-    if ((*it) == (*it).edge2().triangle1()) {
-      flux_sum += (*it).edge2().value().flux_;
-    }
-    else {
-      flux_sum -= (*it).edge2().value().flux_;
-    }
-
-    if ((*it) == (*it).edge3().triangle1()) {
-      flux_sum += (*it).edge3().value().flux_;
-    }
-    else {
-      flux_sum -= (*it).edge3().value().flux_;
-    }
-
-    (*it).value().q_k_bar_ -= (dt/(*it).area()) * flux_sum;
-  }
+  FluxUpdater<typename MESH::Triangle> fu(dt);
+  std::for_each(m.triangle_begin(), m.triangle_end(), fu);
 
   return t + dt;
 }
@@ -430,13 +432,14 @@ int main(int argc, char* argv[])
   double dt = 0.25 * min_edge_length / (sqrt(grav * max_h));
 
   double t_start = 0;
-  double t_end = 10;
+  double t_end = 0.2;
 
   // Preconstruct a Flux functor
   EdgeFluxCalculator f;
   ColorFunctor cf;
 
   // Begin the time stepping
+  { jb_parallel::Timer timer("Hyperbolic step");
   for (double t = t_start; t < t_end; t += dt) {
 
     // Step forward in time with forward Euler
@@ -452,6 +455,7 @@ int main(int argc, char* argv[])
     // These lines slow down the animation for small meshes.
 		if (mesh.num_nodes() < 100)
     	CS207::sleep(0.03);
+  }
   }
 
   return 0;

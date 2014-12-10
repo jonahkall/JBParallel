@@ -650,39 +650,6 @@ class Graph {
     return NodeIterator(this, i2u_.size());
   }
 
-  struct uid2Node {
-    Graph* g_;
-    Node operator()(const int& uid) {
-      return Node(g_, uid);
-    }
-    uid2Node(const Graph* g) : g_(const_cast<Graph*>(g)){};
-    friend class Graph;
-  };
-
-  //std::function<Node()>
-
-  // std::function<Node(size_type)> uid2Node;
-
-  // using NodeIterator = boost::transform_iterator<uid2Node,
-  //     std::vector<size_type>::const_iterator>;
-
-  // // Returns a node_iterator indexed to the first node in the graph.
-  // NodeIterator node_begin() const {
-  //   uid2Node = [] (size_type uid) {return Node(this, uid);};
-  //   auto u = boost::make_transform_iterator(i2u_.begin(), uid2Node);
-  //   return u;
-  // }
-
-  // // Returns a node_iterator indexed to the last node in the graph.
-  // NodeIterator node_end() const {
-  //   uid2Node = [] (size_type uid) {return Node(this, uid);};
-  //   auto u = boost::make_transform_iterator(i2u_.end(), uid2Node);
-  //   return u;  
-  // }
-
-  //boost::transform_iterator<uid2Node,
-   //   std::vector<size_type>::const_iterator>
-
   /** @class Graph::EdgeIterator
    * @brief Iterator class for edges. A forward iterator. */
   class EdgeIterator : private totally_ordered<EdgeIterator> {
