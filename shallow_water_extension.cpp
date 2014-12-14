@@ -16,6 +16,7 @@
 #include <iostream>
 #include "Point.hpp"
 #include "Mesh2.hpp"
+#include "jb_parallel.hpp"
 
 // Standard gravity (average gravity at Earth's surface) in meters/sec^2
 static constexpr double grav = 9.80665;
@@ -168,7 +169,7 @@ struct OilColor {
 			value = ((*it).value().Q.h-1)*100;
 	}
   
-   float proportion = (float) exp(value)/(1+exp(value));
+   //float proportion = (float) exp(value)/(1+exp(value));
 
    //return CS207::Color::make_heat(proportion); 
    return CS207::Color::make_heat(.5); 
@@ -259,16 +260,80 @@ struct NodePosition {
 /* Model the surface*/
 struct Bathymetry{
    double operator()(Point p){
+		 (void) p;
       return 1;
    }
    double partialx(Point p){
+		 (void) p;
       return 0.;
    }
    double partialy(Point p){
+		 (void) p;
       return 0.;
    }
 };
 
+
+
+// struct for flux_updated that will be used in for_each loop
+// follows same exact logic as their implementation
+template<typename TRIANGLE, typename FLUX, typename OBJ>
+struct FluxUpdater{
+	FLUX f;
+	OBJ ext_obj;
+	Bathymetry b;
+	double t;
+	double dt;
+	double rho;
+	
+  void operator () (TRIANGLE tri) {
+		QVar temp_sum = QVar(0.0,0.0,0.0);
+	    //calculate the center point of the triangle
+	    Point tri_center(0,0,0);
+	    Force F;
+	    F.rho = rho;
+	    for (size_type i = 1; i <= 3; ++i) {
+	        tri_center = tri_center + tri.triangle_node(i).position();
+	    }
+	    tri_center = tri_center / 3.;
+	    QVar surface = QVar(0, -grav*(tri).value().Q.h*b.partialx(tri_center),-grav*(tri).value().Q.h*b.partialy(tri_center));
+	    F.Fk = ext_obj(tri_center);
+	    //double Ak = (tri).area();
+	    F.Ak = 1.;
+
+	    for (size_type i=1; i<=3; ++i) {
+
+	      QVar temp;
+	      if ((tri).triangle_edge(i).degree() == 1) {
+	F.Fm = 0.;
+	        F.Am = 1.;
+	        temp = f((tri).normal_vector(i).x, (tri).normal_vector(i).y, dt, (tri).value().Q, QVar((tri).value().Q.h,0.0,0.0), F);
+	      }
+	      else {
+	        Point adj_tri_center(0,0,0);
+	        for (size_type j = 1; j <= 3; ++j) {
+	            adj_tri_center = adj_tri_center + (tri).triAdj_triangle(i).triangle_node(j).position();
+	        }
+	        adj_tri_center = adj_tri_center / 3.;
+	        F.Fm = ext_obj(adj_tri_center);
+	        //double Am = (tri).triAdj_triangle(i).area();
+	        F.Am = 1.;
+
+	        temp = f((tri).normal_vector(i).x, (tri).normal_vector(i).y, dt, (tri).value().Q, (tri).triAdj_triangle(i).value().Q,F);
+	      }
+	      temp *= dt;
+	      temp /= (tri).value().area;
+	      temp_sum += temp;
+	    }
+
+	    (tri).value().Q -= temp_sum;
+	    (tri).value().Q += surface*dt;
+	}
+	
+  FluxUpdater(FLUX& f1, OBJ& ext_obj1, Bathymetry& b1, double t1, double dt1, double rho1) : f(f1), ext_obj(ext_obj1),
+	b(b1),t(t1),dt(dt1),rho(rho1) {};
+	
+};
 
 
 /** Integrate a hyperbolic conservation law defined over the mesh m
@@ -281,50 +346,8 @@ double hyperbolic_step(MESH& m, FLUX& f, OBJ ext_obj, Bathymetry b, double t, do
   // Compute all fluxes. (before updating any triangle Q_bars)
   // For each triangle, update Q_bar using the fluxes as in Equation 8.
   // NOTE: Much like symp_euler_step, this may require TWO for-loops
-
-  for (auto it=m.triangle_begin(); it!=m.triangle_end(); ++it) {
-    QVar temp_sum = QVar(0.0,0.0,0.0);
-    // calculate the center point of the triangle
-    Point tri_center(0,0,0);
-    Force F;
-    F.rho = rho;
-    for (size_type i = 1; i <= 3; ++i) {
-        tri_center = tri_center + (*it).triangle_node(i).position();
-    }
-    tri_center = tri_center / 3.;
-    QVar surface = QVar(0, -grav*(*it).value().Q.h*b.partialx(tri_center),-grav*(*it).value().Q.h*b.partialy(tri_center));
-    F.Fk = ext_obj(tri_center);
-    //double Ak = (*it).area();
-    F.Ak = 1.;
-
-    for (size_type i=1; i<=3; ++i) {
-      
-      QVar temp;
-      if ((*it).triangle_edge(i).degree() == 1) {
-	F.Fm = 0.;
-        F.Am = 1.;
-        temp = f((*it).normal_vector(i).x, (*it).normal_vector(i).y, dt, (*it).value().Q, QVar((*it).value().Q.h,0.0,0.0), F);
-      }
-      else {
-        Point adj_tri_center(0,0,0);
-        for (size_type j = 1; j <= 3; ++j) {
-            adj_tri_center = adj_tri_center + (*it).triAdj_triangle(i).triangle_node(j).position();
-        }
-        adj_tri_center = adj_tri_center / 3.;
-        F.Fm = ext_obj(adj_tri_center);
-        //double Am = (*it).triAdj_triangle(i).area();
-        F.Am = 1.;
-
-        temp = f((*it).normal_vector(i).x, (*it).normal_vector(i).y, dt, (*it).value().Q, (*it).triAdj_triangle(i).value().Q,F);
-      }
-      temp *= dt;
-      temp /= (*it).value().area;
-      temp_sum += temp;
-    }
-
-    (*it).value().Q -= temp_sum;
-    (*it).value().Q += surface*dt;
-  }
+	FluxUpdater<typename MESH::Triangle,FLUX,OBJ> fu(f, ext_obj, b, t, dt, rho);
+	jb_parallel::for_each(m.triangle_begin(),m.triangle_end(), fu);
 
   return t + dt;
 };
