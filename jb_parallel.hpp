@@ -14,6 +14,12 @@
 
 #include "CS207/Util.hpp"
 
+/** @file jb_parallel.hpp
+ * @brief Define the key functions built on top of
+ * OpenMP to be used to optimize code which iterates
+ * over a random access data structure.
+ */
+
 namespace jb_parallel {
 
   // RAII helper class for timing code.
@@ -34,6 +40,8 @@ namespace jb_parallel {
   // threads OMP is making available.
   int threads_available() {
     int p;
+    // This compiler directive instructs OpenMP
+    // to make this block of code parallel.
     #pragma omp parallel
     {
       p = omp_get_num_threads();
@@ -41,7 +49,7 @@ namespace jb_parallel {
     return p;
   }
 
-  // Sorts an array of ints in O(n log n /p)
+  // Sorts an array of ints in O( (n/p) log n )
   template<typename IteratorType>
   void parallel_sort(IteratorType begin, IteratorType end) {
     int sz = end - begin;
