@@ -596,6 +596,15 @@ class Graph {
 			return *this;
 		}
 		
+    NodeIterator& operator[](int n){
+      node_index_ = n;
+      return *this;
+    }
+    
+    int operator-(node_iterator a){
+      return node_index_ - a.node_index_;
+    }
+    
 		bool operator<(const NodeIterator& ni) const{
 			if (g_ < ni.g_){
 				return true;
@@ -605,22 +614,8 @@ class Graph {
 			}
 			return false;
 		}
-		
-		NodeIterator& operator[](int n){
-			node_index_ = n;
-			return *this;
-		}
-		
-		int operator-(node_iterator a){
-			return node_index_ - a.node_index_;
-		}
-
-    //node_iterator operator-(node_iterator a){
-    //  return NodeIterator(this->g_, node_index_ - a->node_index_);
-   // }
-	
-
-   private:
+  
+  private:
     friend class Graph;
     size_type node_index_;
     Graph* g_;

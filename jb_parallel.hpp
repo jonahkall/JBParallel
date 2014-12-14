@@ -139,7 +139,7 @@ namespace jb_parallel {
   void parallel_transform(Iter first, Iter last, UnaryFunction f) {
     int dist = last - first;
     // Parallelize blockwise
-#pragma omp parallel
+    #pragma omp parallel
     {
       int id = omp_get_thread_num();
       int nthreads = omp_get_num_threads();
@@ -152,6 +152,31 @@ namespace jb_parallel {
       for (auto it = start; it != end; ++it) {
         *it = f(*it);
       }
+    }
+  }
+
+  template<class Iter, class UnaryFunction, class T>
+  void parallel_reduction(Iter first, Iter last, UnaryFunction f, T& counter) {
+    int dist = last - first;
+    int nt = threads_available();
+    std::vector<T> counts(nt, 0);
+    // Parallelize blockwise
+    #pragma omp parallel
+    {
+      int id = omp_get_thread_num();
+      int nthreads = omp_get_num_threads();
+
+      auto start = first + id * dist / nthreads;
+      auto end = last;
+      if (id != nthreads - 1){
+        end = first + (id + 1) * dist / nthreads;
+      }
+      for (auto it = start; it != end; ++it) {
+        counts[id] += f(*it);
+      }
+    }
+    for (int i = 0; i < nt; ++i) {
+      counter += counts[i];
     }
   }
 

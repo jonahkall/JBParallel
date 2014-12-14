@@ -20,7 +20,7 @@
 #include "../jb_parallel.hpp"
 
 typedef Graph<double, double> GraphType;
-using namespace std;
+using namespace jb_parallel;
 
 class Interactables {
 public:
@@ -173,7 +173,7 @@ public:
 		{
 			c_ += vec;
 		  auto lam = [&](GraphType::Node n) {n.position()+=vec;};
-		  std::for_each(g_.node_begin(), g_.node_end(), lam);
+		  jb_parallel::for_each(g_.node_begin(), g_.node_end(), lam);
 		}
 
 		Point c_;		// center
@@ -294,7 +294,7 @@ public:
 
 		  // apply fixed node constraint
 		  fixed_mod<GraphType::Node> fm(&g_);
-		 	std::for_each(fixed_nodes_.begin(), fixed_nodes_.end(), fm);
+		 	jb_parallel::for_each(fixed_nodes_.begin(), fixed_nodes_.end(), fm);
 	// #pragma omp parallel for
 	// 	  for (auto it = fixed_nodes_.begin(); it != fixed_nodes_.end(); ++it) {
 	// 	  	auto n = *it;

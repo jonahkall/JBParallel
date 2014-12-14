@@ -94,5 +94,25 @@ int main () {
     assert(x[i] <= x[i + 1]);
   }
 
+  std::vector<int> z(20000000, 2);
+  int counter = 0;
+  {Timer timer("Serial reduction");
+    auto f = [](int i){if (i % 2 == 0) return i; else return 0;};
+    for (size_t i = 0; i < z.size(); ++i) {
+      counter += f(z[i]);
+    }
+  }
+
+  std::cout << counter << std::endl;
+ 
+  counter = 0;
+  {Timer timer("Parallel reduction");
+    auto f = [](int i){if (i % 2 == 0) return i; else return 0;};
+    jb_parallel::parallel_reduction(z.begin(), z.end(), f, counter);
+  }
+
+  std::cout << counter << std::endl;
+
+
   return 0;
 }
