@@ -49,7 +49,14 @@ namespace jb_parallel {
     return p;
   }
 
-  // Sorts an array of ints in O( (n/p) log n )
+  /** BRIEF DESCRIPTION
+   * @param NAME DESCRIPTION
+   * @return DESCRIPTION OF RETURN VALUE
+   * @pre PRECONDITION
+   * @post POSTCONDITION
+   *
+   * LONGER DESCRIPTION, RUNTIME, EXAMPLES, ETC 
+  */
   template<typename IteratorType>
   void parallel_sort(IteratorType begin, IteratorType end) {
     int sz = end - begin;
@@ -58,17 +65,13 @@ namespace jb_parallel {
       std::sort(begin, end);
       return;
     }
-    // currently only works for 4 cores.
-    assert(nt == 4);
     std::vector<IteratorType> bounds(nt*2);
     #pragma omp parallel
     {
       int id = omp_get_thread_num();
       int nthreads = omp_get_num_threads();
-      //std::cout << nthreads << std::endl;
 
       auto start = begin + id * sz / nthreads;
-      //std::cout << "start bound: " << id * sz / nthreads << std::endl;
       auto finish = end;
 			if (id != nthreads - 1){
         finish = begin + (id + 1) * sz / nthreads;
@@ -79,17 +82,28 @@ namespace jb_parallel {
     }
     std::sort(bounds.begin(), bounds.end());
     // Time to do some in_place merges
-    // currently hardcoded for 4 cores
+    // This section hardcoded for four cores.
     if (nt == 4) {
       std::inplace_merge(bounds[0],bounds[2], bounds[3]);
       std::inplace_merge(bounds[4],bounds[6], bounds[7]);
       std::inplace_merge(bounds[0], bounds[4], bounds[7]);
     }
+
+    // This sectino hardcoded for 2 cores: only a single inplace
+    // merge necessary.
     if (nt == 2) {
       std::inplace_merge(bounds[0],bounds[2], bounds[3]);
     }
   }
 
+  /** BRIEF DESCRIPTION
+   * @param NAME DESCRIPTION
+   * @return DESCRIPTION OF RETURN VALUE
+   * @pre PRECONDITION
+   * @post POSTCONDITION
+   *
+   * LONGER DESCRIPTION, RUNTIME, EXAMPLES, ETC 
+  */
 	template <typename IteratorType>
 	// function for finding minimum of standard vector
 	// in O(n/p). Works for any number of cores.
@@ -122,6 +136,14 @@ namespace jb_parallel {
     return min_total;
   }
 
+  /** BRIEF DESCRIPTION
+   * @param NAME DESCRIPTION
+   * @return DESCRIPTION OF RETURN VALUE
+   * @pre PRECONDITION
+   * @post POSTCONDITION
+   *
+   * LONGER DESCRIPTION, RUNTIME, EXAMPLES, ETC 
+  */
  template<class Iter, class UnaryFunction>
   void for_each(Iter first, Iter last, UnaryFunction f) {
     int dist = last - first;
@@ -143,6 +165,14 @@ namespace jb_parallel {
 
   }
 
+  /** BRIEF DESCRIPTION
+   * @param NAME DESCRIPTION
+   * @return DESCRIPTION OF RETURN VALUE
+   * @pre PRECONDITION
+   * @post POSTCONDITION
+   *
+   * LONGER DESCRIPTION, RUNTIME, EXAMPLES, ETC 
+  */
   template<class Iter, class UnaryFunction>
   void parallel_transform(Iter first, Iter last, UnaryFunction f) {
     int dist = last - first;
@@ -163,6 +193,14 @@ namespace jb_parallel {
     }
   }
 
+  /** BRIEF DESCRIPTION
+   * @param NAME DESCRIPTION
+   * @return DESCRIPTION OF RETURN VALUE
+   * @pre PRECONDITION
+   * @post POSTCONDITION
+   *
+   * LONGER DESCRIPTION, RUNTIME, EXAMPLES, ETC 
+  */
   template<class Iter, class UnaryFunction, class T>
   void parallel_reduction(Iter first, Iter last, UnaryFunction f, T& counter) {
     int dist = last - first;
