@@ -3,6 +3,7 @@
 #include <queue>
 #include <iostream>
 #include <cstdlib>
+#include <algorithm>
 
 #include "CS207/SDLViewer.hpp"
 #include "CS207/Util.hpp"
@@ -14,7 +15,7 @@
 
 // Node value type for graph representation of clustering
 // problem.  This allows us to quickly access which cluster a
-// node 
+// node belongs to.
 struct node_value_type {
   int cluster_assignment;
   bool changed;
@@ -22,6 +23,9 @@ struct node_value_type {
 
 typedef Graph<node_value_type, int> GraphType;
 
+// This struct allows parallelization of the process of finding
+// closest centers, however, the graph has to be truly HUGE
+// for this optimization to provide speedup.
 template<typename NodeType>
 struct find_centers {
   std::vector<Point>* centers_;
@@ -35,7 +39,8 @@ struct find_centers {
       : centers_(centers), center_counts_(center_counts){};
 };
 
-// This functor takes in a node and the vector of cluster
+// This functor takes in a node and the vector of cluster centers, and
+// assigns each node, by updating its value, to its closest cluster.
 template<typename NodeType>
 struct assign_centers {
   std::vector<Point> centers_;
@@ -71,8 +76,8 @@ struct assign_centers {
  *
  * LONGER DESCRIPTION, RUNTIME, EXAMPLES, ETC 
  */
-template<typename GraphType>
-void kmeans_f(GraphType& g, int k, bool opt) {
+template<typename Graph>
+void kmeans_f(Graph& g, int k, bool opt) {
   srand((unsigned)time(0));
   for (auto it = g.node_begin(); it != g.node_end(); ++it) {
     (*it).value().cluster_assignment = rand() % k;
@@ -87,7 +92,9 @@ void kmeans_f(GraphType& g, int k, bool opt) {
 
   // While some cluster assignment has changed, continue iterating.
   while (1) {
-    // Can't easily be parallelized because of data dependencies.
+    // Parallelizing this loop seems to not give a performance increase,
+    // probably not enough work being done/too much shared access to
+    // cache lines.
     for (auto it = g.node_begin(); it != g.node_end(); ++it) {
       int ca = (*it).value().cluster_assignment;
       ++center_counts[ca];
@@ -102,7 +109,7 @@ void kmeans_f(GraphType& g, int k, bool opt) {
     // loop over all data and assign things to their closest center
     bool some_assignment_changed = false;
     assign_centers<typename GraphType::Node> ac(centers, k);
-    if (!opt) {
+    if (opt == 0) {
       std::for_each(g.node_begin(), g.node_end(), ac);
     }
     else {
