@@ -16,10 +16,11 @@ EXEC += test_edges
 EXEC += mtl_test
 EXEC += poisson
 EXEC += shallow_water
-EXEC += goodptest
+EXEC += ptest
 EXEC += openmp
 EXEC += kmeans
 EXEC += shallow_water_extension
+EXEC += ptest_graphical.cpp 
 
 # Get the shell name to determine the OS
 UNAME := $(shell uname)
