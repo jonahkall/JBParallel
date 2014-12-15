@@ -53,10 +53,10 @@ namespace jb_parallel {
    * @param begin, end the range of what is to be sored
 	 * @tparam IteratorType must meet the requirements of RandomAccessIterator
    * @pre begin < end and begin and end are in the same range
-	 * @pre IteratorType::value_type supports the < function
-	 * @pre Machine has exactly 4 available machines
+	 * @pre IteratorType::value_type supports <, + int (looser than random access!) 
+	 * @pre Machine has exactly 1, 2, or 4 available cores
    * @post For all i in [begin, end] !(i+1 < i)
-   * Runtime O((nlog(n))/4  + 2n)
+   * Runtime O((nlog(n))/p)
 	 * std::sort used in this function uses a quicksort/heapsort hybrid known as intro sort
    */
   template<typename IteratorType>

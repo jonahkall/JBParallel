@@ -51,6 +51,8 @@ int main () {
               << parallel_min(min_test.begin(), min_test.end()) << std::endl;
   }
 
+  std::cout << std::endl;
+
   unsigned N = 40000000;
   std::vector<double> a;
 
@@ -78,6 +80,8 @@ int main () {
     jb_parallel::parallel_transform(a.begin(), a.end(), func);
   }
 
+  std::cout << std::endl;
+
   std::vector<int> y = x;
 
   { Timer timer("Serial Sort");
@@ -94,10 +98,12 @@ int main () {
     assert(x[i] <= x[i + 1]);
   }
 
+  std::cout << std::endl;
+
   std::vector<int> z(30000000, 20);
   long long counter = 0;
   {Timer timer("Serial reduction");
-    auto f = [](int i){if (i % 2 == 0) return i; else return 0;};
+    auto f = [](int i){if (i % 6 == 0) return i; else return 0;};
     for (size_t i = 0; i < z.size(); ++i) {
       counter += f(z[i]);
     }
@@ -107,7 +113,7 @@ int main () {
  
   counter = 0;
   {Timer timer("Parallel reduction");
-    auto f = [](int i){if (i % 2 == 0) return i; else return 0;};
+    auto f = [](int i){if (i % 6 == 0) return i; else return 0;};
     jb_parallel::parallel_reduction(z.begin(), z.end(), f, counter);
   }
 
