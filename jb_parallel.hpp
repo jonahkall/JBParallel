@@ -104,8 +104,9 @@ namespace jb_parallel {
   * @pre begin < end and begin and end are in the same range
   * @pre IteratorType::value_type supports the < function
   * @post For all i in [begin, end] !(i+1 < i)
-  * Runtime O((nlog(n))/4  + 2n)
+  * Runtime O((nlog(n))/4  + 2n) where n = last - first
   * std::sort used in this function uses a quicksort/heapsort hybrid known as intro sort
+	* whose runtime is O(nlogn)
   */
 
 	template <typename IteratorType>
@@ -146,7 +147,7 @@ namespace jb_parallel {
    * @pre first < last and first and last are in same range
 	 * @pre 
    * @post for all i in [first,last] *(new first) = f(* old first)
-   * Runtime O(O(f)*(last - first)/nthreads)
+   * Runtime O(O(f)*(n)/num_threads)
   */
  template<class Iter, class UnaryFunction>
   void for_each(Iter first, Iter last, UnaryFunction f) {
@@ -171,11 +172,11 @@ namespace jb_parallel {
 
  /** A function that applies 
   * @param first, last the range to apply the function to
- * @param f the unary function object to be applied
- * @tparam Iter must meet the requirements of RandomAccessIterator
- * @tparam UnaryFunction must meet the requirements of MoveConstructible
+  * @param f the unary function object to be applied
+  * @tparam Iter must meet the requirements of RandomAccessIterator
+  * @tparam UnaryFunction must meet the requirements of MoveConstructible
   * @pre first < last and first and last are in same range
-  * @return for all i in [first,last] return[i]= f[range[i]]
+  * @post for all i in [first,last] return[i]= f[range[i]]
   * Runtime O(O(f)*(last - first)/nthreads)
  */
   template<class Iter, class UnaryFunction>
