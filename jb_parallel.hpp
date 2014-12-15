@@ -49,14 +49,16 @@ namespace jb_parallel {
     return p;
   }
 
-  /** BRIEF DESCRIPTION
-   * @param NAME DESCRIPTION
-   * @return DESCRIPTION OF RETURN VALUE
-   * @pre PRECONDITION
-   * @post POSTCONDITION
-   *
-   * LONGER DESCRIPTION, RUNTIME, EXAMPLES, ETC 
-  */
+  /** A function that sorts a range in parallel
+   * @param begin, end the range of what is to be sored
+	 * @tparam IteratorType must meet the requirements of RandomAccessIterator
+   * @pre begin < end and begin and end are in the same range
+	 * @pre IteratorType::value_type supports the < function
+	 * @pre Machine has exactly 4 available machines
+   * @post For all i in [begin, end] !(i+1 < i)
+   * Runtime O((nlog(n))/4  + 2n)
+	 * std::sort used in this function uses a quicksort/heapsort hybrid known as intro sort
+   */
   template<typename IteratorType>
   void parallel_sort(IteratorType begin, IteratorType end) {
     int sz = end - begin;
@@ -96,18 +98,18 @@ namespace jb_parallel {
     }
   }
 
-  /** BRIEF DESCRIPTION
-   * @param NAME DESCRIPTION
-   * @return DESCRIPTION OF RETURN VALUE
-   * @pre PRECONDITION
-   * @post POSTCONDITION
-   *
-   * LONGER DESCRIPTION, RUNTIME, EXAMPLES, ETC 
+ /** A function that finds the minimum in a range in parallel
+  * @param begin, end the range of what is to be sored
+  * @tparam IteratorType must meet the requirements of RandomAccessIterator
+  * @pre begin < end and begin and end are in the same range
+  * @pre IteratorType::value_type supports the < function
+  * @post For all i in [begin, end] !(i+1 < i)
+  * Runtime O((nlog(n))/4  + 2n)
+  * std::sort used in this function uses a quicksort/heapsort hybrid known as intro sort
   */
+
 	template <typename IteratorType>
-	// function for finding minimum of standard vector
-	// in O(n/p). Works for any number of cores.
-	// Requires a random access iterator
+
 	typename std::iterator_traits<IteratorType>::value_type
 	parallel_min(IteratorType begin, IteratorType end) {
     int nt = threads_available();
@@ -136,13 +138,15 @@ namespace jb_parallel {
     return min_total;
   }
 
-  /** BRIEF DESCRIPTION
-   * @param NAME DESCRIPTION
-   * @return DESCRIPTION OF RETURN VALUE
-   * @pre PRECONDITION
-   * @post POSTCONDITION
-   *
-   * LONGER DESCRIPTION, RUNTIME, EXAMPLES, ETC 
+  /** A function that applies 
+   * @param first, last the range to apply the function to
+	 * @param f the unary function object to be applied
+	 * @tparam Iter must meet the requirements of RandomAccessIterator
+	 * @tparam UnaryFunction must meet the requirements of MoveConstructible
+   * @pre first < last and first and last are in same range
+	 * @pre 
+   * @post for all i in [first,last] *(new first) = f(* old first)
+   * Runtime O(O(f)*(last - first)/nthreads)
   */
  template<class Iter, class UnaryFunction>
   void for_each(Iter first, Iter last, UnaryFunction f) {
@@ -165,14 +169,15 @@ namespace jb_parallel {
 
   }
 
-  /** BRIEF DESCRIPTION
-   * @param NAME DESCRIPTION
-   * @return DESCRIPTION OF RETURN VALUE
-   * @pre PRECONDITION
-   * @post POSTCONDITION
-   *
-   * LONGER DESCRIPTION, RUNTIME, EXAMPLES, ETC 
-  */
+ /** A function that applies 
+  * @param first, last the range to apply the function to
+ * @param f the unary function object to be applied
+ * @tparam Iter must meet the requirements of RandomAccessIterator
+ * @tparam UnaryFunction must meet the requirements of MoveConstructible
+  * @pre first < last and first and last are in same range
+  * @return for all i in [first,last] return[i]= f[range[i]]
+  * Runtime O(O(f)*(last - first)/nthreads)
+ */
   template<class Iter, class UnaryFunction>
   void parallel_transform(Iter first, Iter last, UnaryFunction f) {
     int dist = last - first;
