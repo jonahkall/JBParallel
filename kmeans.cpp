@@ -84,6 +84,7 @@ void kmeans_f(Graph& g, int k, bool opt) {
   }
   std::vector<Point> centers(k);
   std::vector<int> center_counts(k);
+
   for (int i = 0; i < k; ++i) {
     centers[i] = Point(0,0,0);
     center_counts[i] = 0;
@@ -155,6 +156,7 @@ int main(int argc, char** argv)
   // and a 0 for parallelization off.
   std::string PATH_TO_NODES;
   bool opt = true;
+
   if (argc == 2) {
     PATH_TO_NODES = "large_clustering_problem2.nodes";
     if (std::stoi(argv[1]) == 0) {

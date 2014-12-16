@@ -160,7 +160,8 @@ void set_tri_directions(M& mesh) {
 struct VelComparator {
   template <typename Node>
   bool operator()(const Node& n1, const Node& n2) const {
-    return (norm(n1.value().value_.velocity) < norm(n2.value().value_.velocity));
+    return (norm(n1.value().value_.velocity) <
+        norm(n2.value().value_.velocity));
   }
 };
 
@@ -171,7 +172,8 @@ struct VelHeatMap {
     template <typename Node>
     // Returns a heat value for a node based off velocity(n)
     CS207::Color operator()(const Node& n) const {
-      return CS207::Color::make_heat(norm(n.value().value_.velocity)/max_vel_);
+      return CS207::Color::make_heat(
+          norm(n.value().value_.velocity)/max_vel_);
     }
     /* Constructor */
     VelHeatMap(double max_vel) : max_vel_(max_vel) {}
@@ -206,7 +208,8 @@ template <typename M>
 double mesh_shape_volume(M* m) {
   double volume = 0.;
   volume_inc vi;
-  jb_parallel::parallel_reduction(m->triangle_begin(), m->triangle_end(), vi, volume);
+  jb_parallel::parallel_reduction(m->triangle_begin(),
+        m->triangle_end(), vi, volume);
   return volume;
 }
 
