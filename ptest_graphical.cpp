@@ -17,10 +17,6 @@
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/iterator/filter_iterator.hpp>
 
-#include "thrust/sort.h"
-#include "thrust/for_each.h"
-#include "thrust/reduce.h"
-
 #include "CS207/Util.hpp"
 #include "jb_parallel.hpp"
 

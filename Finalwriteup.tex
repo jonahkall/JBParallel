@@ -190,14 +190,13 @@ The program kcachegrind allows one to see the output of this profiler using a ni
 
 The extensions provided by other students on Piazza was invaluable to our project. We were given large amounts of very well written C++ code that included for\_loops that could be easily parallelized using our jb\_parallel library.  Note that for all of these, we only looked at a specific subset of the code in the hopes of optimizing it.  Also please take any criticisms we have with a grain of salt, as we often grabbed code from these projects while they were still in an intermediate state, and this probably accounts for any problems we had.
 
-
 \subsection{George Lok and Serguei Balanovich}
 
-Very well written, understandable code.  We really liked the way their code was laid out.  This allowed us to quickly, and modularly, modify their code.  And we understand they used our package as well, independently of us!
+Very well written, understandable code.  We really liked the way their code was laid out.  This allowed us to quickly, and modularly, modify their code.  And we understand they used our package as well, independently of us!  Our actual modifications to their code are described above, namely, we sped up their mesh volume computation using parallel reducer (and we think they parallelized some other stuff!  We just wanted to use parallel\_reducer, hence why we explored their code).
 
 \subsection{Brian Zhang and Tarik Moon}
 
-At the time we received it, the code wasn't super well documented, lots of stuff un-commented and lots of stuff commented out.  Again, we think we just received the code at an unfavorable time, when that group was still figuring stuff out (because we could pull after any commit).  Nonetheless, we were extremely impressed with the results of the project.
+At the time we received it, the code wasn't super well documented, lots of stuff un-commented and lots of stuff commented out.  Again, we think we just received the code at an unfavorable time, when that group was still figuring stuff out (because we could pull after any commit).  Nonetheless, we were extremely impressed with the results of the project.  We made their iterators random access, and parallelized the sympletic euler step engine of their code, and played around with making various constraints parallel.  We found that computing the interactions using their \texttt{void interact(Ball\& b, ...)} in parallel gave us the most speedup.
 
 \subsection{Wenshuai Ye and Yuhao Zhu}
 
