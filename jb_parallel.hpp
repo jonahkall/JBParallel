@@ -35,19 +35,6 @@ namespace jb_parallel {
       std::cout << msg << ": " << elapsed << "s" << std::endl;
     }
   };
-	
-  // RAII helper class for timing code.
-  // No message, only a comma before 
-  struct TimerClean {
-    CS207::Clock clock;
-    TimerClean() {
-      clock.start();
-    }
-    ~TimerClean() {
-      double elapsed = clock.seconds();
-      std::cout << "," << elapsed << std::endl;
-    }
-  };
 
   // Simple function which tells the user how many
   // threads OMP is making available.
@@ -81,20 +68,26 @@ namespace jb_parallel {
       return;
     }
     std::vector<IteratorType> bounds(nt*2);
-    #pragma omp parallel
+    #pragma omp parallel shared(bounds)
     {
       int id = omp_get_thread_num();
       int nthreads = omp_get_num_threads();
 
       auto start = begin + id * sz / nthreads;
       auto finish = end;
+
 			if (id != nthreads - 1){
         finish = begin + (id + 1) * sz / nthreads;
       }
+
+      // Remember which subsections of the array are sorted
+      // so that they can be inplace merged later
       bounds[2*id] = start;
       bounds[2*id + 1] = finish;
       std::sort(start, finish);
     }
+
+    // Relies on operator overload of vector iterator < operator.
     std::sort(bounds.begin(), bounds.end());
     // Time to do some in_place merges
     // This section hardcoded for four cores.
@@ -117,9 +110,8 @@ namespace jb_parallel {
   * @pre begin < end and begin and end are in the same range
   * @pre IteratorType::value_type supports the < function
   * @post For all i in [begin, end] !(i+1 < i)
-  * Runtime O((nlog(n))/4  + 2n) where n = last - first
+  * Runtime O((nlog(n))/4  + 2n)
   * std::sort used in this function uses a quicksort/heapsort hybrid known as intro sort
-	* whose runtime is O(nlogn)
   */
 
 	template <typename IteratorType>
@@ -129,7 +121,7 @@ namespace jb_parallel {
     int nt = threads_available();
     std::vector<int> mins(nt);
     auto sz = end - begin;
-    #pragma omp parallel
+    #pragma omp parallel shared(mins)
     {
       int id = omp_get_thread_num();
       int nthreads = omp_get_num_threads();
@@ -158,8 +150,9 @@ namespace jb_parallel {
 	 * @tparam Iter must meet the requirements of RandomAccessIterator
 	 * @tparam UnaryFunction must meet the requirements of MoveConstructible
    * @pre first < last and first and last are in same range
+	 * @pre 
    * @post for all i in [first,last] *(new first) = f(* old first)
-   * Runtime O(O(f)*(n)/num_threads)
+   * Runtime O(O(f)*(last - first)/nthreads)
   */
  template<class Iter, class UnaryFunction>
   void for_each(Iter first, Iter last, UnaryFunction f) {
@@ -182,13 +175,16 @@ namespace jb_parallel {
 
   }
 
- /** A function that applies 
+ /** A function that applies a unary operator to every element
+  *   in a range in parallel.
+  *
   * @param first, last the range to apply the function to
   * @param f the unary function object to be applied
-  * @tparam Iter must meet the requirements of RandomAccessIterator
+  * @tparam Iter must have an operator + (int) in addition to standard
+  *         iterator abstraction requirements.
   * @tparam UnaryFunction must meet the requirements of MoveConstructible
   * @pre first < last and first and last are in same range
-  * @post for all i in [first,last] return[i]= f[range[i]]
+  * @post for all i in [0, last - first] [new] first + i= f[old first + i]
   * Runtime O(O(f)*(last - first)/nthreads)
  */
   template<class Iter, class UnaryFunction>
@@ -211,13 +207,18 @@ namespace jb_parallel {
     }
   }
 
-  /** BRIEF DESCRIPTION
-   * @param NAME DESCRIPTION
-   * @return DESCRIPTION OF RETURN VALUE
-   * @pre PRECONDITION
-   * @post POSTCONDITION
+  /** Increments a counter according to a function in parallel, also
+   * known as 'reduce' functionality
+   * @param first, last the range to apply the function to
+   * @param f the unary function object to be applied
+   * @tparam Iter must have an operator + (int) in addition to standard
+   *         iterator abstraction requirements.
+   * @tparam UnaryFunction must meet the requirements of MoveConstructible
+   * @pre first < last and first and last are in same range
+   * @post counter contains \sum_i=0^{last-first} f(*(first + i))
    *
-   * LONGER DESCRIPTION, RUNTIME, EXAMPLES, ETC 
+   * Runs in time O(O(f)*(last - first)/nthreads), should achieve
+   * speedup roughly linear in the number of cores.
   */
   template<class Iter, class UnaryFunction, class T>
   void parallel_reduction(Iter first, Iter last, UnaryFunction f, T& counter) {
@@ -225,7 +226,7 @@ namespace jb_parallel {
     int nt = threads_available();
     std::vector<T> counts(nt, 0);
     // Parallelize blockwise
-    #pragma omp parallel
+#pragma omp parallel shared(counts)
     {
       int id = omp_get_thread_num();
       int nthreads = omp_get_num_threads();
