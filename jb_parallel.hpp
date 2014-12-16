@@ -35,6 +35,19 @@ namespace jb_parallel {
       std::cout << msg << ": " << elapsed << "s" << std::endl;
     }
   };
+	
+  // RAII helper class for timing code.
+  // No message, only a comma before 
+  struct TimerClean {
+    CS207::Clock clock;
+    TimerClean() {
+      clock.start();
+    }
+    ~TimerClean() {
+      double elapsed = clock.seconds();
+      std::cout << "," << elapsed << std::endl;
+    }
+  };
 
   // Simple function which tells the user how many
   // threads OMP is making available.
@@ -145,7 +158,6 @@ namespace jb_parallel {
 	 * @tparam Iter must meet the requirements of RandomAccessIterator
 	 * @tparam UnaryFunction must meet the requirements of MoveConstructible
    * @pre first < last and first and last are in same range
-	 * @pre 
    * @post for all i in [first,last] *(new first) = f(* old first)
    * Runtime O(O(f)*(n)/num_threads)
   */
