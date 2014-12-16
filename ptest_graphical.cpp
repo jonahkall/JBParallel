@@ -28,65 +28,71 @@ using namespace jb_parallel;
 
 int main () {
   std::default_random_engine generator(
-      std::chrono::system_clock::now().time_since_epoch().count());
+  std::chrono::system_clock::now().time_since_epoch().count());
   std::uniform_int_distribution<int> distribution(1,12000000);
   auto gen = std::bind(distribution, generator);
   (void) gen;
-  // allocate 100 million random integers
-  // srand(time(NULL));
-  // for (int i = 0; i < 30000000; ++i) {
-  //   x.push_back(rand() % 20000000);
-  // }
-//
-// for (int j = 1; j < pow(10,10); j *= 10){
+
+// for (int N = 10000; N <= 163840000; N *=2){
 //   std::vector<int> min_test;
-//   for (int i = 0; i < j; ++i) {
+//   for (int i = 0; i < N; ++i) {
 //     min_test.push_back(rand() % 20000000);
 //   }
 //
 //
-//   { Timer timer("Serial Min " + std::to_string(j));
+//  	CS207::Clock clock;
+//   clock.start();
 //    int j = *std::min_element(min_test.begin(), min_test.end());
-//    std::cout << std::to_string(j) << std::endl;
-//   }
+//  	double elapsed = clock.seconds();
+//  	std::cout << N << " , " << elapsed;
 //
-//   { Timer timer("jb_parallel parallel_min " + std::to_string(j));
-//      auto j = parallel_min(min_test.begin(), min_test.end());
-//     std::cout << std::to_string(j) << std::endl;
-//   }
 //
+//  	CS207::Clock clock2;
+//   clock2.start();
+//   auto k = parallel_min(min_test.begin(), min_test.end());
+// 	elapsed = clock2.seconds();
+// 	std::cout << " , " << elapsed << std::to_string(j) << std::to_string(k) << std::endl;
 // }
+
 //
-//  for (int N = 1; N < pow(10,9); N *= 10){
+// for (int N = 10000; N <= 163840000; N *=2){
 //   std::vector<double> a;
 //
 //    // Normal loop
 //   a = std::vector<double>(N,4);
-//   { Timer timer("Serial Parallel Loop " + std::to_string(N));
-//     for (auto it = a.begin(); it < a.end(); ++it)
-//       *it = std::exp(std::sqrt(*it));
-//   }
+//  	CS207::Clock clock;
+//   clock.start();
+//   for (auto it = a.begin(); it < a.end(); ++it)
+//   	*it = std::exp(std::sqrt(*it));
+// 	double elapsed = clock.seconds();
+// 	std::cout << N << " , " << elapsed;
 //
 //     // Parallel loop
 //   a = std::vector<double>(N,4);
-//   { Timer timer("OMP Parallel Loop " + std::to_string(N));
+//  	CS207::Clock clock2;
+//   clock2.start();
 // #pragma omp parallel for
 //     for (auto it = a.begin(); it < a.end(); ++it) {
 //       *it = std::exp(std::sqrt(*it));
 //     }
-//   }
+// 		elapsed = clock2.seconds();
+// 		std::cout << " , " << elapsed;
+//
 //
 //   // Wrapped in a function
 //   a = std::vector<double>(N,4);
-//   { Timer timer("JB Parallel_Transform " + std::to_string(N));
-//     // Create a lambda function and call parallel_transform
-//     auto func = [](double ai) { return std::exp(std::sqrt(ai)); };
-//     jb_parallel::parallel_transform(a.begin(), a.end(), func);
-//   }
+//  	CS207::Clock clock3;
+//   clock3.start();
+//   auto func = [](double ai) { return std::exp(std::sqrt(ai)); };
+//   jb_parallel::parallel_transform(a.begin(), a.end(), func);
+// 	elapsed = clock3.seconds();
+// 	std::cout << " , " << elapsed << std::endl;
+//
+//
 // }
-
-
-// for (int N = 1; N < pow(10,9); N *= 10){
+//
+//
+// for (int N = 10000; N <= 163840000; N *=2){
 //   std::vector<int> x;
 //
 //   for (int i = 0; i < N; ++i) {
@@ -95,42 +101,44 @@ int main () {
 //
 //  std::vector<int> y = x;
 //
-//   { Timer timer("Serial Sort " + std::to_string(N) );
-//     std::sort(y.begin(), y.end());
-//   }
+//  	CS207::Clock clock2;
+//  	clock2.start();
+//   std::sort(y.begin(), y.end());
+// 	double elapsed = clock2.seconds();
+// 	std::cout << N << " , " << elapsed;
+// 	y.clear();
 //
-//   { Timer timer("Parallel Sort " + std::to_string(N));
-//     parallel_sort(x.begin(),x.end());
-//   }
+//  	CS207::Clock clock;
+//  	clock.start();
+// 	parallel_sort(x.begin(),x.end());
+// 	elapsed = clock.seconds();
+// 	std::cout << " , " << elapsed <<std::endl;
 // }
 //
-//   // Check that parallel sort is sorting correctly.
-//   for (size_t i = 0; i < x.size() - 1; ++i) {
-//     assert(x[i] <= x[i + 1]);
-//   }
 //
-
-for (int N = 1; N < pow(10,9); N *=10){
-
-  std::vector<int> z(N, 2);
+//
+//
+for (int N = 10000; N <= 163840000; N *=2){
+	CS207::Clock clock;
+  std::vector<int> z(N, 20);
   int counter = 0;
-  {Timer timer("Serial reduction " + std::to_string(N));
-    auto f = [](int i){if (i % 2 == 0) return i; else return 0;};
-    for (size_t i = 0; i < z.size(); ++i) {
+	std::cout << N;
+  auto f = [](int i){if (i % 6 == 0) return i; else return 0;};
+	clock.start();
+    for (size_t i = 0; i < z.size(); ++i)
       counter += f(z[i]);
-    }
-  }
+	  double elapsed = clock.seconds();
+	  std::cout << " , " << elapsed;
 
-  std::cout << counter << std::endl;
+  int counter2 = 0;
+	CS207::Clock clock2;
+		clock2.start();
+    jb_parallel::parallel_reduction(z.begin(), z.end(), f, counter2);
+    elapsed = clock2.seconds();
+    std::cout << " , " << elapsed;
 
+  std::cout << " , " << counter << std::endl;
 
-  counter = 0;
-  {Timer timer("Parallel reduction " + std::to_string(N));
-    auto f = [](int i){if (i % 2 == 0) return i; else return 0;};
-    jb_parallel::parallel_reduction(z.begin(), z.end(), f, counter);
-  }
-
-  std::cout << counter << std::endl;
 }
 
 

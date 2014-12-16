@@ -20,7 +20,7 @@ EXEC += ptest
 EXEC += openmp
 EXEC += kmeans
 EXEC += shallow_water_extension
-EXEC += ptest_graphical.cpp 
+EXEC += ptest_graphical
 
 # Get the shell name to determine the OS
 UNAME := $(shell uname)
