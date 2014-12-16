@@ -21,6 +21,7 @@ struct node_value_type {
   bool changed;
 };
 
+// Define Graph as a graph templated on above struct
 typedef Graph<node_value_type, int> GraphType;
 
 // This struct allows parallelization of the process of finding
@@ -68,13 +69,20 @@ struct assign_centers {
 };
 
 
-/** BRIEF DESCRIPTION
- * @param NAME DESCRIPTION
- * @return DESCRIPTION OF RETURN VALUE
- * @pre PRECONDITION
- * @post POSTCONDITION
+/** Uses the kmeans clustering algorithm t
+ * @param g a valid graph
+ * @pre Graph is valid, 0 <= k <= g.num_nodes()
+ * @post produces a local minimum (good enough,
+ * note that all permutations of the correct cluster assignments
+ * are minimums, so loss is non-convex) such taht for all i
+ * graph.node(i).value().cluster_assignment is the index of the cluster
+ * the node was assigned to
  *
- * LONGER DESCRIPTION, RUNTIME, EXAMPLES, ETC 
+ * Runtime: theoretically bounded only exponentially, but in
+ * practice usually converges within just a few iterations, or
+ * even in the worst practical case, O(kn/p), where k is the
+ * number of clusters, n is the number of points, and c is a small
+ * constant.
  */
 template<typename Graph>
 void kmeans_f(Graph& g, int k, bool opt) {

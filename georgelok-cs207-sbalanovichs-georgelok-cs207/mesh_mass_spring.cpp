@@ -100,7 +100,7 @@ double symp_euler_step(M& m, double t, double dt, F force, C constraints) {
     n.position() += n.value().value_.velocity * dt;
   }*/
   pmod<F> pm(dt);
-  std::for_each(m.node_begin(), m.node_end(), pm);
+  jb_parallel::for_each(m.node_begin(), m.node_end(), pm);
 
   // Enfore constraints after position update but before force calculation.
   constraints(m, t);
