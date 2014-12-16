@@ -34,3 +34,8 @@ ggplot(min_test, aes(V1)) +
   geom_line(aes(y = V2, color = "STL Min")) + 
   geom_line(aes(y = V3, color = "JBParallel Min")) +
   labs(title = "Comparison of Min performance", x = "Number  of elements in vector", y = "Time taken (seconds, logarithmic)")
+
+
+grid0normal <- read.csv("~/Dropbox/JBParallel/grid0normal.txt", header=FALSE)
+ggplot(data=grid0normal, aes(x=V1, y=V3, fill=V2)) + geom_bar(stat="identity", position=position_dodge()) +
+	  labs(title = "Comparison of Symplectic Euler Step in Mass_spring", x = "Grid Number", y = "Time (Seconds)", fill = "for_each implementation")
