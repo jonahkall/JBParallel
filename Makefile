@@ -4,20 +4,9 @@
 #
 
 # Executables to build
-EXEC += primes
-EXEC += viewer
-EXEC += subgraph
-EXEC += shortest_path
-EXEC += test
-EXEC += combo
 EXEC += mass_spring
-EXEC += test_nodes
-EXEC += test_edges
-EXEC += mtl_test
-EXEC += poisson
 EXEC += shallow_water
 EXEC += ptest
-EXEC += openmp
 EXEC += kmeans
 EXEC += shallow_water_extension
 EXEC += ptest_graphical

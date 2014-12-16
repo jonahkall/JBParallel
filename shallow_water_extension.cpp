@@ -346,6 +346,7 @@ double hyperbolic_step(MESH& m, FLUX& f, OBJ ext_obj, Bathymetry b, double t, do
   // Compute all fluxes. (before updating any triangle Q_bars)
   // For each triangle, update Q_bar using the fluxes as in Equation 8.
   // NOTE: Much like symp_euler_step, this may require TWO for-loops
+	// Using our new flux_updater and our parallelized for_each loop
 	FluxUpdater<typename MESH::Triangle,FLUX,OBJ> fu(f, ext_obj, b, t, dt, rho);
 	jb_parallel::for_each(m.triangle_begin(),m.triangle_end(), fu);
 

@@ -946,6 +946,7 @@ public:
 			return (m_==x.m_ && tri_uid_==x.tri_uid_);
 		}
 		
+		// all triangle functions from this point on implemented by us
     triangle_iterator& operator[](int n){
       assert(n < m_->triangles_.size() && n >= 0);
       tri_uid_ = n;
@@ -984,6 +985,7 @@ public:
   friend triangle_iterator operator-(triangle_iterator a, int n){
     return a-=n;
   }
+	// end of our additions
 	
 
 	/* Return the first triangle interator
