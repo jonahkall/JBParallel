@@ -118,7 +118,9 @@ make kmeans
 \section{How fast is our code?}
 Parallelizing code can make it much faster (2-3 times for 4 core machines like the ones that we were using), but this comes at the cost of considerable overhead. Thus, it is important to consider the scale of your problem when deciding whether or not to use our alogrithms. Generally speaking, these jb\_parallel algorithms will lose to the comparable algorithm provided by standard until there are $10^6$ entries to be performed on it. On a vector of $10^8$ doubles, our sort algorithm was 2.11x as fast as std, for\_each was 2.05x as fast, our min algorithm was 2.27x as fast, and our reduce algorithm was  ~2.5x as fast. Please consult the following figures for a more detailed viewing of our algorithms compared to std at different range values:\\\\
 \newpage
- \begin{figure}[h!]
+
+
+ \begin{figure}[t!]
     \centering
 \includegraphics[scale = 0.4]{Min_comparison}
     \caption{\textbf{Performance on min\_element}:\\We see that as the number of elements increases, our code begins. Fluctuations likely due to randomness (code too slow to run for a lot of trials)}
@@ -139,6 +141,13 @@ Parallelizing code can make it much faster (2-3 times for 4 core machines like t
     \caption{\textbf{Performance on sort}:\\ Again we win at large sizes, same causes for randomness as above.}
     \end{figure}
  \newpage
+
+		\begin{figure}[t!]
+		\centering
+		\includegraphics[scale = 0.4]{symplectic_comparison}
+		\caption{\textbf{Performance on symplectic\_euler\_step in mass\_spring.cpp}:\\ We win for larger graph sizes, but still overhead in small grids.}
+		\end{figure}
+
 
 It's important to note that in each of these figures, very little work is being done on each iteration of the parallel/non-parallel loop.  The more work done on each iteration, however, the more the parallel algorithm wins, so in general practice, one would expect more speedup than is shown here.  Other interesting results we came across while working on things in a test environment: nesting a parallel loop within non-parallel loops is very, very costly (unfortunately this is inevitable on the *step functions because we can't really compute things in the future), and using shared variables via OpenMP's \texttt{shared} keyword.
 
@@ -191,6 +200,8 @@ Very well written, understandable code.  We really liked the way their code was 
 At the time we received it, the code wasn't super well documented, lots of stuff un-commented and lots of stuff commented out.  Again, we think we just received the code at an unfavorable time, when that group was still figuring stuff out (because we could pull after any commit).  Nonetheless, we were extremely impressed with the results of the project.
 
 \subsection{Wenshuai Ye and Yuhao Zhu}
+
+Nice implementation of mesh, very fast, but lots of compiler warnings, some of which were removed, but not all.
 
 Wenshuai and Yuhao wrote a great extension to shallow\_water called shallow\_water\_extension.cpp. We also used their Mesh.cpp file, which we renamed Mesh2.cpp to not conflict with our existing code. 
 

@@ -84,7 +84,8 @@ template <typename G, typename F, typename Constraint>
 double symp_euler_step(G& g, double t, double dt, F force, Constraint c) {
 
   position_mod<F> pm(dt);
-  for_each(g.node_begin(), g.node_end(), pm);
+  // for_each(g.node_begin(), g.node_end(), pm);
+	// if this variable is true, then 
   bool optimize = true;
   if (optimize)
     for_each(g.node_begin(), g.node_end(), pm);
